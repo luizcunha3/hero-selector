@@ -8,62 +8,60 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var checkAmount = 0.0
-    @State private var numberOfPeople = 2
-    @State private var tipPercentage = 20
-    @FocusState private var amountIsFocused: Bool
-    
-    let tipPercentages = [10,15,20,25,0]
-    var totalPerPerson: Double {
-        let peopleCount = Double(numberOfPeople + 2)
-        let tipSelection = Double(tipPercentage)
-        let tipValue = (checkAmount/100) * tipSelection
-        let grandTotal = checkAmount + tipValue
-        return grandTotal / peopleCount
+    init(viewModel: BaseHeroMainViewModel = HeroMainViewModel()) {
+        self.viewModel = viewModel
     }
+    
+    @ObservedObject var viewModel: BaseHeroMainViewModel
+    
     var body: some View {
-        NavigationView {
-            Form {
-                Section {
-                    TextField("Amount", value: $checkAmount, format: .currency(code: Locale.current.currencyCode ?? "BRL"))
-                        .focused($amountIsFocused)
-                        .keyboardType(.decimalPad)
-                    Picker("Number of people", selection: $numberOfPeople) {
-                        ForEach(2..<100) {
-                            Text("\($0) people")
-                        }
-                    }
-                }
-                Section {
-                    Picker("Tip percentage", selection: $tipPercentage) {
-                        ForEach(tipPercentages, id: \.self) {
-                            Text($0, format: .percent)
-                        }
-                    }.pickerStyle(.segmented)
-                } header: {
-                    Text("How much tip do you want to leave")
-                }
-                Section {
-                    Text(totalPerPerson, format: .currency(code: Locale.current.currencyCode ?? "BRL"))
-                } header: {
-                    Text("")
-                }
-            }
-            .navigationTitle("We Split")
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        amountIsFocused = false
-                    }
-                }
-            }
+        ZStack {
+            RadialGradient(stops: [
+                .init(color: Color(red: 0.1, green: 0.2, blue: 0.45), location: 0.3),
+                .init(color: Color(red: 0.58, green: 0.65, blue: 0.65), location: 0.3),
+                
+                
+                
+            ], center: .top, startRadius: 200, endRadius: 700).ignoresSafeArea()
+            VStack {
+                Text("Hero Selector")
+                    .font(.largeTitle.bold())
+                    .foregroundColor(.white)
+                VStack(spacing: 15) {
+                    
+                    AsyncImage(url: viewModel.getHeroImageUrl()) { image in
+                        image
+                            .resizable()
+                            .scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }.clipShape(RoundedRectangle(cornerRadius: 20))
+                        .shadow(radius: 5)
+                        .padding(20)
+                    Text(viewModel.getHeroName())
+                        .font(.largeTitle.weight(.semibold))
+                }.frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                    .background(.thinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                Spacer()
+                Button("Another Hero") {
+                    viewModel.getRandomHero()
+                }.buttonStyle(.bordered)
+                    .tint(Color(red: 0.1, green: 0.2, blue: 0.45))
+                
+            }.padding()
+        }
+        .onAppear(){
+            viewModel.getRandomHero()
         }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        
+        ContentView(viewModel: MockHeroMainViewModel())
     }
 }
+
